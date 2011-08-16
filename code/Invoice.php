@@ -205,7 +205,7 @@ class Invoice extends DataObject{
 		if($payments = $this->Payments()){
 			foreach($payments as $payment){
 				if($payment->Status == 'Success')
-					$totalpaid += $payment->Amount;
+					$totalpaid += $payment->Amount->Amount;
 			}
 		}
 		return (float)($this->getTotal(false) - $totalpaid);
