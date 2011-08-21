@@ -10,6 +10,9 @@
  */
 class Invoice extends DataObject{
 
+	public static $singular_name = "Invoice";
+	public static $plural_name = "Invoices";
+
 	static $db = array(
 		'Name' => 'Varchar(255)',
 		'Address' => 'Text',
@@ -79,6 +82,13 @@ class Invoice extends DataObject{
 
 	protected static $duedayofnextmonth = null;
 	protected static $duedays = null;
+
+	static $modeladmin_actions = array(
+			'sendemail' => 'Send email',
+			'createpdf' => 'Generate PDF version',
+			'statuspaid' => 'Set status to: paid',
+			'statuscancelled' => 'Set status to: cancelled'
+	);
 
 	function set_due_day_of_month($day = 20){
 		self::$duedayofnextmonth = $day;
@@ -156,6 +166,7 @@ class Invoice extends DataObject{
 			$item->write();
 			$this->InvoiceItems()->add($item);
 		}else{
+			//is this good practice, or should I just write the object to db if no id?
 			user_error("Invoice must have an ID before items can be added. Call ->write() first.",E_USER_ERROR);
 		}
 	}
@@ -266,10 +277,12 @@ class Invoice extends DataObject{
 		$email = new Email(Email::getAdminEmail(),$this->Email,$subject,$body); //TODO: add bounce handler url
 
 		if($sendpdf && $this->PDFVersionID && $file = $this->PDFVersion()){
-			$email->attachFile(
-				$file->FileName,
-				$file->Title,
-			"application/pdf");
+			if(is_file($file->FileName))
+				$email->attachFile(
+					$file->FileName,
+					$file->Title,
+				"application/pdf");
+
 		}else{
 			$email->setBody($this->renderWith( array('Invoice')));
 		}
