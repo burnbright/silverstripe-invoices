@@ -1,17 +1,12 @@
 <?php
 
 /**
- * Database version of an invoice. version 0.1
- *
- * Ideas:
- * Can be used with Payments module, but not required.
- * Can be connected with Invoiceable DataObjects, but not required.
- *
+ * Invoice
  */
 class Invoice extends DataObject{
 
-	public static $singular_name = "Invoice";
-	public static $plural_name = "Invoices";
+	public static $singular_name = "invoice";
+	public static $plural_name = "invoices";
 
 	static $db = array(
 		'Name' => 'Varchar(255)',
@@ -101,6 +96,8 @@ class Invoice extends DataObject{
 	function getCMSFields(){
 		$fields = parent::getCMSFields();
 
+		$adminurl = "admin/invoices/Invoice/$this->ID";
+
 		if($this->ID){
 			$fields->addFieldToTab('Root.Main',new ReadonlyField('Total',"Total",$this->Total),'Address');
 			if($this->getTotal(false))
@@ -112,17 +109,14 @@ class Invoice extends DataObject{
 
 		if($this->ID){
 			$fields->addFieldToTab('Root.Main', new LiteralField('InvoiceNumber', '<h3>Invoice #: '.$this->InvoiceNumber().'</h3>'), 'Name');
-
-			//TODO: make these ajax links
-			$fields->addFieldToTab('Root.Tools',new LiteralField('viewlink','<a href="admin/invoices/viewinvoice/'.$this->ID.'" target="new">View invoice</a><br/>'));
-			$fields->addFieldToTab('Root.Tools',new LiteralField('generatepdflink','<a href="admin/invoices/generateinvoice/'.$this->ID.'" target="new">Generate PDF</a><br/>'));
+			$fields->addFieldToTab('Root.Tools',new LiteralField('viewlink',"<a href=\"$adminurl/viewinvoice\" target=\"new\">View invoice</a><br/>"));
+			$fields->addFieldToTab('Root.Tools',new LiteralField('generatepdflink',"<a href=\"$adminurl/generateinvoicepdf\" target=\"new\">Generate PDF</a><br/>"));
 		}
 
 		if($this->Email){
 			$sentmessage = ($this->Sent) ? "Re-send the invoice via email" : "Email this invoice";
 			$fields->addFieldToTab('Root.Tools',new LiteralField('sendemaillink',
-				'<a href="admin/invoices/emailinvoice/'.$this->ID.'" target="new">'.$sentmessage.'</a>'
-				//.'<a href="admin/invoices/previewemail/'.$this->ID.'">preview / edit</a><br/>'
+				"<a href=\"$adminurl/emailinvoice\" target=\"new\">$sentmessage</a>"
 			));
 
 			$link = "mailto:$this->Email?Subject=".$this->getEmailSubject();
