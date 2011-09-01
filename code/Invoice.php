@@ -267,16 +267,11 @@ class Invoice extends DataObject{
 
 		$body = $this->getEmailContent();
 		$subject = $this->getEmailSubject();
-
 		$email = new Email(Email::getAdminEmail(),$this->Email,$subject,$body); //TODO: add bounce handler url
 
-		if($sendpdf && $this->PDFVersionID && $file = $this->PDFVersion()){
-			if(is_file($file->FileName))
-				$email->attachFile(
-					$file->FileName,
-					$file->Title,
-				"application/pdf");
-
+		$pdffile = $this->PDFVersion();
+		if($sendpdf && $pdffile && is_file($pdffile->getFullPath())){
+			$email->attachFile($pdffile->FileName,$pdffile->Title,"application/pdf");
 		}else{
 			$email->setBody($this->renderWith( array('Invoice')));
 		}
@@ -296,11 +291,11 @@ class Invoice extends DataObject{
 	}
 
 	function getEmailContent($urlencode = false){
-		$body = ($this->InvoiceType() && $this->InvoiceType()->EmailContent)? $this->InvoiceType()->EmailContent : "Here is your invoice.";
-		//if($this->EmailContent) $body = $this->EmailContent;
-		if($urlencode)
-			$body = rawurlencode(str_replace("\n\n","\n",Convert::html2raw($body)));
-		//TODO: don't allow body to be empty....sometimes <p></p> is causing empty emails
+		$body = _t("Invoice.DEFAULTEMAILMESSAGE","<p>Here is your invoice.</p>");
+		$typecontent = ($this->InvoiceType() && $this->InvoiceType()->EmailContent)? $this->InvoiceType()->EmailContent : null;
+		$tc = trim(Convert::html2raw($typecontent));
+		if($typecontent && !empty($tc)) $body = $typecontent;
+		if($urlencode) $body = rawurlencode(str_replace("\n\n","\n",Convert::html2raw($body)));
 		return $body;
 	}
 
