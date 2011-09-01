@@ -4,8 +4,9 @@ class InvoiceItem extends DataObject{
 	static $db = array(
 		'Description' => 'Text',
 		'Quantity' => 'Decimal',
-		'Cost' => 'Currency'
+		'Cost' => 'Currency',
 		//discount?
+		'Sort' => 'Int'
 	);
 
 	static $has_one = array(
