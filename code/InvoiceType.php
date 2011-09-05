@@ -40,7 +40,7 @@ class InvoiceType extends DataObject{
 		'PaymentDays'
 	);
 
-	function TaxRate(){
+	function HasTaxRate(){
 		return ($this->TaxRate > 0)? $this->TaxRate : false ;
 	}
 
