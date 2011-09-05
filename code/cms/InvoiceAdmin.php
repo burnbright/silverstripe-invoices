@@ -70,11 +70,9 @@ class InvoiceAdmin_InvoiceRecordController extends ModelAdmin_RecordController{
 	function viewinvoice(){
 		if($invoice = $this->getCurrentRecord()){
 			Requirements::clear();
-			Requirements::themedCSS("layout");
-			Requirements::themedCSS("typography");
-			Requirements::themedCSS("form");
 			$customcss = <<<CSS
 					body{
+						font-family:arial;
 						margin:20px auto;
 						padding:60px 30px;
 						border:1px solid #ccc;
