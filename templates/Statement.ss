@@ -174,7 +174,7 @@
 			</tbody>
 			<tfoot>
 				<tr>
-					<th colspan="5" class="balancelabel">Balance Due:</th>
+					<th colspan="6" class="balancelabel">Balance Due:</th>
 					<td class="money">$BalanceDue.Nice</td>
 				</tr>
 			</tfoot>
