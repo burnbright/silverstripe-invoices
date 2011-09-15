@@ -10,6 +10,7 @@
 				color:#000000;
 			}
 			body,html{
+				font-family:Arial,sans-serif;
 				background:#fff !important;
 			}
 			body{
