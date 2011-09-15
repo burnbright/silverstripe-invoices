@@ -72,7 +72,6 @@
 				table.costsummary tbody tr.paid td.activity{
 					text-decoration: line-through;
 				}
-				
 				table.costsummary tbody tr.credit td{
 					color:#666;
 				}
@@ -122,7 +121,6 @@
 					font-weight:bold;
 					background:#fff;
 				}
-			
 			.footer{
 				position:absolute;
 				bottom:20pt;
@@ -134,19 +132,11 @@
 	</head>
 	<body>
 		<div id="Header">
-			<img class="logo" src="$ThemeDir/images/websitelogo.jpg"/>
-			<h1 style="color:black;font-weight:bold;">Statement</h1>
+			<h1 style="color:black;font-weight:bold;">Statement of Accounts</h1>
 			<div style="clear:both;"><!--  --></div>
 		</div>
 		<p class="date"><em>Date: $Date.Long</em></p>
 		<div class="addressbox">
-			<p>Burnbright Websites<br/>
-				9 Menin Road<br/>
-				Raumati Beach<br/>
-				Kapiti Coast<br/>
-				Wellington<br/>
-				5032
-			</p>
 		</div>
 		<div class="addressbox">
 			<p><strong>Bill To:</strong><br/>
@@ -186,13 +176,11 @@
 					<td class="money">$BalanceDue.Nice</td>
 				</tr>
 			</tfoot>
-		</table>
-		
+		</table>	
 		<% if InvoiceType %>
 		<div class="toc">
 			$InvoiceType.TermsConditions
 		</div>
 		<% end_if %>
-		
 	</body>
 </html>
