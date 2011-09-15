@@ -1,0 +1,16 @@
+body{
+	font-family:arial;
+	margin:20px auto;
+	padding:60px 30px;
+	border:1px solid #ccc;
+	width: 800px;
+	position:relative;
+	background:#fff;
+   -moz-box-shadow:3px 3px 15px #999;
+   -webkit-box-shadow:3px 3px 15px #999;
+   box-shadow:3px 3px 15px #999;
+}
+html{
+	background:none;
+	background-color:#eee;
+}

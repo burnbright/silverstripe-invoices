@@ -333,10 +333,14 @@ class Invoice extends DataObject{
 	}
 
 	function TimeOverdue(){
-		if(!$this->DueDate) return '';
-			return (strtotime($this->DueDate) < time()) ? strtoupper("DUE ".$this->dbObject('DueDate')->Ago()) : "";
+		if(!$this->DueDate || $this->IsPaid())
+			return '';
+		return (strtotime($this->DueDate) < time()) ? strtoupper("DUE ".$this->dbObject('DueDate')->Ago()) : "";
 	}
 
+	/**
+	 * Outputs number of days overdue
+	 */
 	function DaysOverdue(){
 		return floor((time() - strtotime($this->DueDate))/60/60/24);
 	}

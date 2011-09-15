@@ -22,7 +22,6 @@ class InvoiceAdmin extends ModelAdmin{
 		$invoices = DataObject::get('Invoice');
 		$unpaidcount = $unsentcount = $paidcount = $overduecount = $receivablescount = 0;
 		$unpaidmoney = $unsentmoney = $paidmoney = $overduemoney = $recievablesmoney = 0;
-
 		if($invoices){
 			foreach($invoices as $invoice){
 				if($invoice->Status == 'unpaid'){$unpaidcount++;$unpaidmoney += $invoice->getTotalOutstanding();}
@@ -35,7 +34,6 @@ class InvoiceAdmin extends ModelAdmin{
 				if($invoice->Status == 'unpaid' && $invoice->Sent){$receivablescount++;$recievablesmoney += $invoice->getTotalOutstanding();}
 			}
 		}
-
 		$data = array(
 			'UnpaidCount' => $unpaidcount,
 			'UnsentCount'=> $unsentcount,
@@ -54,7 +52,6 @@ class InvoiceAdmin extends ModelAdmin{
 
 }
 
-
 class InvoiceAdmin_InvoiceRecordController extends ModelAdmin_RecordController{
 
 	static $allowed_actions = array(
@@ -70,25 +67,7 @@ class InvoiceAdmin_InvoiceRecordController extends ModelAdmin_RecordController{
 	function viewinvoice(){
 		if($invoice = $this->getCurrentRecord()){
 			Requirements::clear();
-			$customcss = <<<CSS
-					body{
-						font-family:arial;
-						margin:20px auto;
-						padding:60px 30px;
-						border:1px solid #ccc;
-						width: 800px;
-						position:relative;
-						background:#fff;
-					   -moz-box-shadow:3px 3px 15px #999;
-					   -webkit-box-shadow:3px 3px 15px #999;
-					   box-shadow:3px 3px 15px #999;
-					}
-					html{
-						background:none;
-						background-color:#eee;
-					}
-CSS;
-			Requirements::customCSS($customcss);
+			Requirements::themedCSS("pagepreview","screen,projection");
 			return $invoice->renderWith('Invoice');
 		}
 		return _t("InvoiceAdmin.INVOICENOTFOUND","Invoice could not be found");
