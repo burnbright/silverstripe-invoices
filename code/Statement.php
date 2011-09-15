@@ -127,7 +127,8 @@ class InvoiceStatementLine extends StatementLine{
 	}
 
 	function Debit(){
-		return $this->dataobject->getTotal(false);
+		if($this->dataobject->Status != "cancelled")
+			return $this->dataobject->getTotal(false);
 	}
 
 	function Activity(){

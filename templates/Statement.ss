@@ -152,6 +152,7 @@
 				<tr>
 					<th>Date</th>
 					<th>Activity</th>
+					<th>Status</th>
 					<th>Due Date</th>
 					<th>Amount</th>
 					<th>Payments</th>
@@ -163,6 +164,7 @@
 					<tr class="$EvenOdd <% if DataObject.IsPaid %>paid<% end_if %> $CreditDebit">
 						<td class="date">$Date.Long</td>
 						<td class="activity">$Activity</td>
+						<td class="status">$Status</td>
 						<td class="due"><% if DueDate %>$DueDate.Long<% end_if %></td>
 						<td class="debit money"><% if Debit %>$NiceDebit.Nice<% end_if %></td>
 						<td class="credit money"><% if Credit %>$NiceCredit.Nice<% end_if %></td>
