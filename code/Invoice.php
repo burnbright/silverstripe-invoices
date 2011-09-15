@@ -237,11 +237,6 @@ class Invoice extends DataObject{
 	 * Generate a PDF version of this invoice.
 	 */
 	function generatePDFInvoice($sstemplate = 'Invoice'){
-		//Requirements::clear(); //can't clear requirements because it interferes with form submissions
-		Requirements::themedCSS("layout");
-		Requirements::themedCSS("typography");
-		Requirements::themedCSS("form");
-
 		//find or make $filelocation
 		$pdf = new BurnbrightPDFGenerator(); //requires pdfgenerator
 		$data = $this->renderWith( array($sstemplate)); // insert populated template
