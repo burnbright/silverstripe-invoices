@@ -238,7 +238,7 @@ class Invoice extends DataObject{
 	 */
 	function generatePDFInvoice($sstemplate = 'Invoice'){
 		//find or make $filelocation
-		$pdf = new BurnbrightPDFGenerator(); //requires pdfgenerator
+		$pdf = new PDFGenerator(); //requires pdfgenerator
 		$data = $this->renderWith( array($sstemplate)); // insert populated template
 		$filename = preg_replace("/[^a-zA-Z0-9]/", "",strtolower($this->Name)).'_invoice'.$this->ID;//<InvoiceType>-Invoice
 		$file = $pdf->sendToFile($data,$filename,'Invoices'); //save to assets
