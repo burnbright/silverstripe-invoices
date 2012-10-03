@@ -11,18 +11,14 @@ class Invoice extends DataObject{
 	static $db = array(
 		'Name' => 'Varchar(255)',
 		'Address' => 'Text',
-
 		'Email' => 'Varchar',
 		'Sent' => 'Boolean',	//TODO: change to date?
-
 		'DueDate' => 'Date',
 		'Status' => 'Enum("paid,unpaid,cancelled","unpaid")',
-
 		//Hacky solution to store parent of unknown classname
 		//TODO: change to same as DataObject ClassName Enum
 		'ParentID' => 'Int',
 		'ParentClassName'  => "Varchar",
-
 		'NoticeLastSent' => 'Date'
 	);
 
@@ -46,14 +42,16 @@ class Invoice extends DataObject{
 		'SubTotal' => 'Currency',
 		'Tax' => 'Currency',
 		'TotalOutstanding' => 'Currency',
-		'TimeOverdue' => 'Varchar'
+		'TimeOverdue' => 'Varchar',
+		'PaidDate' => 'Date'
 	);
 
 	static $summary_fields = array(
-		'InvoiceNumber' => 'Invoice Number',
+		'InvoiceNumber' => 'Number',
 		'Name' => 'Name',
 		'Created' => 'Date', //TODO: find out how to style better
-		'DueDate' => 'Due Date',
+		'DueDate' => 'Due',
+		'PaidDate' => 'Paid',
 		'TimeOverdue' => 'Overdue',
 		'InvoiceType.Name' => 'Type',
 		'Total' => 'Total',
@@ -214,6 +212,13 @@ class Invoice extends DataObject{
 			}
 		}
 		return (float)($this->getTotal(false) - $totalpaid);
+	}
+	
+	function PaidDate(){
+		$payments = $this->Payments("","\"Created\" DESC");
+		if($payments->exists()){
+			return $payments->First()->Created;
+		}
 	}
 
 	/**
