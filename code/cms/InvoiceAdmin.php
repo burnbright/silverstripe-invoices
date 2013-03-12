@@ -4,13 +4,11 @@ class InvoiceAdmin extends ModelAdmin{
 	static $url_segment = 'invoices';
 	static $menu_title = 'Invoices';
 	static $menu_priority = 1;
+	//static $menu_icon = 'invoices/images/invoice-icon.png';
 
 	static $managed_models = array(
-		'Invoice' => array(
-			'record_controller' => 'InvoiceAdmin_InvoiceRecordController'
-		),
-		'InvoiceType',
-		'Payment'
+		'Invoice',
+		'InvoiceType'
 	);
 	public static $model_importers = array();
 
@@ -50,24 +48,60 @@ class InvoiceAdmin extends ModelAdmin{
 		return new ArrayData($data);
 	}
 
+	function getEditForm($id = null, $fields = null) {
+		$form = parent::getEditForm($id, $fields);
+		if($grid = $form->Fields()->fieldByName("Invoice")){
+			$detailform = $grid->getConfig()->getComponentByType('GridFieldDetailForm');
+			$detailform->setItemRequestClass('InvoiceGridFieldDetailForm_ItemRequest');
+		}
+		return $form;
+	}
+	
+	function init(){
+		parent::init();
+		Requirements::javascript("invoices/javascript/InvoiceAdmin.EditForm.js");
+	}
+	
 }
 
-class InvoiceAdmin_InvoiceRecordController extends ModelAdmin_RecordController{
+class InvoiceGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_ItemRequest{
 
-	static $allowed_actions = array(
-		'viewinvoice',
-		'emailinvoice',
-		'generateinvoicepdf',
-		'previewemail'
-	);
+	function ItemEditForm(){
+		$form = parent::ItemEditForm();
+		if(!$this->record || !$this->record->ID){
+			return $form;
+		}
+		$form->Actions()->push(new CompositeField(
+			LiteralField::create("viewinvoice","<a class=\"ss-ui-button newwindow\" href=\"".$this->Link("viewinvoice")."\">View</a>")
+		));
+		
+		if(!$this->record->PDFVersionID){
+			$form->Actions()->insertAfter(
+				LiteralField::create("generateinvoicepdf","<a class=\"ss-ui-button reloader\" href=\"".$this->Link("generateinvoicepdf")."\">Generate PDF</a>"),
+				"viewinvoice"
+			);
+		}
+		elseif(!$this->record->Sent){
+			$form->Actions()->insertAfter(
+				LiteralField::create("previewemail","<a class=\"ss-ui-button\" href=\"".$this->Link("previewemail")."\">Preview Email</a>"),
+				"viewinvoice"
+			);
+			$form->Actions()->insertAfter(
+				LiteralField::create("emailinvoice","<a class=\"ss-ui-button\" href=\"".$this->Link("emailinvoice")."\">Email Invoice</a>"),
+				"viewinvoice"
+			);
+		}
+
+		return $form;
+	}
 
 	/**
 	* Outputs html for viewing an invoice in browser.
 	*/
 	function viewinvoice(){
-		if($invoice = $this->getCurrentRecord()){
+		if($invoice = $this->record){
 			Requirements::clear();
-			Requirements::themedCSS("pagepreview","screen,projection");
+			Requirements::themedCSS("pagepreview","invoices","screen,projection");
 			return $invoice->renderWith('Invoice');
 		}
 		return _t("InvoiceAdmin.INVOICENOTFOUND","Invoice could not be found");
@@ -78,7 +112,7 @@ class InvoiceAdmin_InvoiceRecordController extends ModelAdmin_RecordController{
 	*/
 	function generateinvoicepdf(){
 		Requirements::clear();
-		if($invoice = $this->getCurrentRecord()){
+		if($invoice = $this->record){
 			$invoice->generatePDFInvoice();
 			return "Generated: <a href='".$invoice->PDFVersion()->Link()."'>".$invoice->PDFVersion()->Link()."</a>";
 		}
@@ -89,14 +123,17 @@ class InvoiceAdmin_InvoiceRecordController extends ModelAdmin_RecordController{
 	 * Sends invoice via email.
 	 */
 	function emailinvoice(){
-		if($invoice = $this->getCurrentRecord()){
+		$message = _t("InvoiceAdmin.INVOICENOTFOUND","Invoice could not be found");
+		if($invoice = $this->record){
 			if($invoice->sendEmail()){
-				return _t("InvoiceAdmin.EMAILSUCCESSFUL","email sent successfully");
+				$message = _t("InvoiceAdmin.EMAILSUCCESSFUL","email sent successfully");
 			}else{
-				return _t("InvoiceAdmin.EMAILUNSUCCESSFUL","email NOT sent");
+				$message = _t("InvoiceAdmin.EMAILUNSUCCESSFUL","email NOT sent");
 			}
 		}
-		return _t("InvoiceAdmin.INVOICENOTFOUND","Invoice could not be found");
+		$this->response->addHeader('X-Status', rawurlencode($message));
+		
+		return $this->getResponseNegotiator()->respond($this->request);
 	}
 
 	/**
@@ -104,25 +141,27 @@ class InvoiceAdmin_InvoiceRecordController extends ModelAdmin_RecordController{
 	 * @todo: finish email previewing / editing
 	 */
 	function previewemail(){
-		if($invoice = $this->getCurrentRecord()){
+		if($invoice = $this->record){
 			//TODO: this email form could become a system-wide tool
-			$fields = new FieldSet(
-				new EmailField("To","To"),
+			$fields = new FieldList(
+				new EmailField("Email","To"),
 				new EmailField("CC","CC"),
 				new EmailField("From","From"),
 				new TextField("Subject"),
 				new TextareaField('Content')
 			);
 
-			$form = new Form($this,'Form',$fields,new FieldSet(new FormAction('emailinvoice','Send')));
+			$form = new Form($this,'Form',$fields,new FieldList(new FormAction('emailinvoice','Send')));
 			$form->loadDataFrom($invoice);
 
 			//TODO or: return form->forAjaxTemplate() ???
-			return array(
+			$email =  new ArrayData(array(
 					'EmailContent' => $invoice->getEmailContent(),
 					'EmailForm' => $form,
 					'Invoice' => $invoice
-			);
+			));
+			
+			return $email->renderWith("InvoiceAdmin_previewemail");
 		}
 		return _t("InvoiceAdmin.INVOICENOTFOUND","Invoice could not be found");
 	}

@@ -83,51 +83,39 @@ class Invoice extends DataObject{
 			'statuscancelled' => 'Set status to: cancelled'
 	);
 
-	function set_due_day_of_month($day = 20){
+	static function set_due_day_of_month($day = 20){
 		self::$duedayofnextmonth = $day;
 	}
 
-	function set_due_days($days = 14){
+	static function set_due_days($days = 14){
 		self::$duedays = $days;
 	}
 
 	function getCMSFields(){
 		$fields = parent::getCMSFields();
-
-		$adminurl = "admin/invoices/Invoice/$this->ID";
-
+		$maintab = $fields->findOrMakeTab('Root.Main');
 		if($this->ID){
 			$fields->addFieldToTab('Root.Main',new ReadonlyField('Total',"Total",$this->Total),'Address');
 			if($this->getTotal(false))
 				$fields->addFieldToTab('Root.Main',new ReadonlyField('TotalOutstanding',"Total Outstanding",$this->dbObject('TotalOutstanding')->Nice()),'Address');
 		}
-
-		$fields->addFieldToTab('Root.Main',$datefield = new PopupDateTimeField('Created',"Invoice Date"),'Address');
-		$fields->addFieldToTab('Root.Main',$duedatefield = new CalendarDateField('DueDate',"Due Date"),'Address');
-
+		$fields->addFieldToTab('Root.Main',$created = new DatetimeField("Created"),'Address');
+		$created->getDateField()->setConfig("showcalendar", true);
+		$created->setTitle("Invoice Date");
+		$fields->addFieldToTab('Root.Main',$duedate = new DatetimeField("DueDate"),'Address');
+		$duedate->getDateField()->setConfig("showcalendar", true);
 		if($this->ID){
+			$adminurl = "admin/invoices/Invoice/$this->ID";
 			$fields->addFieldToTab('Root.Main', new LiteralField('InvoiceNumber', '<h3>Invoice #: '.$this->InvoiceNumber().'</h3>'), 'Name');
-			$fields->addFieldToTab('Root.Tools',new LiteralField('viewlink',"<a href=\"$adminurl/viewinvoice\" target=\"new\">View invoice</a><br/>"));
-			$fields->addFieldToTab('Root.Tools',new LiteralField('generatepdflink',"<a href=\"$adminurl/generateinvoicepdf\" target=\"new\">Generate PDF</a><br/>"));
+		}else{
+			$fields->removeFieldsFromTab("Root.Main",array("Sent","NoticeLastSent","Status"));
 		}
-
-		if($this->Email){
-			$sentmessage = ($this->Sent) ? "Re-send the invoice via email" : "Email this invoice";
-			$fields->addFieldToTab('Root.Tools',new LiteralField('sendemaillink',
-				"<a href=\"$adminurl/emailinvoice\" target=\"new\">$sentmessage</a>"
-			));
-
-			$link = "mailto:$this->Email?Subject=".$this->getEmailSubject();
-			$link .= "&Body=".$this->getEmailContent(true);
-			$fields->addFieldToTab('Root.Tools',new LiteralField('composeemail',
-				"<a href=\"$link\">Compose email</a>"
-			));
+		$invoicetype = $maintab->fieldByName("InvoiceTypeID");
+		$fields->removeFieldsFromTab("Root.Main",array("ParentID","ParentClassName","InvoiceTypeID"));
+		$fields->addFieldToTab("Root.Main", $invoicetype,"Created");
+		if(!$this->PDFVersionID){
+			$maintab->removeByName("PDFVersion");
 		}
-
-		$maintab = $fields->findOrMakeTab('Root.Main');
-		$maintab->removeByName('ParentID');
-		$maintab->removeByName('ParentClassName');
-
 		return $fields;
 	}
 
@@ -142,6 +130,7 @@ class Invoice extends DataObject{
 		}elseif(self::$duedays){
 			$this->DueDate = date('Y-m-d', strtotime("+".self::$duedays." day"));
 		}
+		$this->Status = "unpaid";
 	}
 
 	/**
@@ -194,8 +183,8 @@ class Invoice extends DataObject{
 		$total = 0;
 		$total += $this->SubTotal();
 		$total += $this->Tax($total);//add tax
-		if($nice)
-			return DBField::create('Currency',$total)->Nice();
+		//if($nice)
+			//return DBField::create('Currency',$total)->Nice();
 		return $total;
 	}
 
@@ -237,17 +226,26 @@ class Invoice extends DataObject{
 		//TODO: check payments if they've been paid
 		return false;
 	}
+	
+	function canDelete($member = null){
+		if($this->Sent){
+			return false;
+		}
+		return parent::canDelete($member);
+	}
 
 	/**
 	 * Generate a PDF version of this invoice.
 	 */
 	function generatePDFInvoice($sstemplate = 'Invoice'){
-		//find or make $filelocation
-		$pdf = new PDFGenerator(); //requires pdfgenerator
-		$data = $this->renderWith( array($sstemplate)); // insert populated template
-		$filename = preg_replace("/[^a-zA-Z0-9]/", "",strtolower($this->Name)).'_invoice'.$this->ID;//<InvoiceType>-Invoice
-		$file = $pdf->sendToFile($data,$filename,'Invoices'); //save to assets
-		$this->PDFVersionID = $file;
+		$filename = preg_replace("/[^a-zA-Z0-9]/", "",strtolower($this->Name)).'_invoice'.$this->ID;
+		
+		$pdf = new SS_DOMPDF();
+		$pdf->setHTML($this->renderWith($sstemplate));
+		$pdf->render();
+		$file = $pdf->toFile($filename);
+		
+		$this->PDFVersionID = $file->ID;
 		$this->write();
 	}
 

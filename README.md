@@ -2,16 +2,12 @@
     
 ## Maintainer Contact   
 
- * Jeremy Shipman (Nickname: Jedateach, jeremy@burnbright.co.nz)
+ * Jeremy Shipman (Nickname: Jedateach, jeremy@burnbright.net)
 
 ## Requirements
 
- * SilverStripe 2.4+
- * PDFGenerator Module http://www.silverstripe.org/pdfgenerator-module/
-
-## Documentation
-
-<Links to the wiki, blog posts, etc>
+ * SilverStripe 3.1+
+ * DOMPDF Module: https://github.com/burnbright/silverstripe-dompdf
 
 ## Installation Instructions
 
@@ -20,6 +16,3 @@ Copy module folder into your SilverStripe installation directory.
 ## Usage Overview
 
 Create invoices. Generate PDF versions. Send via email.
-
-## Known issues
-

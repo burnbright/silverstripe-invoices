@@ -2,9 +2,9 @@
 /**
  * Customisations to {@link Payment}
  */
-class InvoicePaymentDecorator extends DataObjectDecorator {
+class InvoicePaymentDecorator extends DataExtension {
 	
-	function extraStatics() {
+	function extraStatics($class = null, $extension = null) {
 		
 		//Customise model admin summary fields
 		//warning - can't do this because it affects DataObject
@@ -27,7 +27,7 @@ class InvoicePaymentDecorator extends DataObjectDecorator {
 		);
 	}
 	
-	function updateCMSFields(&$fields){
+	function updateCMSFields(FieldList $fields){
 		
 		$fields->addFieldToTab('Root.Main',new PopupDateTimeField('Created','Date'));
 		
