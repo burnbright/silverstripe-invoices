@@ -107,6 +107,7 @@ class Invoice extends DataObject{
 		if($this->ID){
 			$adminurl = "admin/invoices/Invoice/$this->ID";
 			$fields->addFieldToTab('Root.Main', new LiteralField('InvoiceNumber', '<h3>Invoice #: '.$this->InvoiceNumber().'</h3>'), 'Name');
+			$maintab->fieldByName("NoticeLastSent")->setConfig("showcalendar",true);
 		}else{
 			$fields->removeFieldsFromTab("Root.Main",array("Sent","NoticeLastSent","Status"));
 		}
