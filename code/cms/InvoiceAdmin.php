@@ -32,20 +32,27 @@ class InvoiceAdmin extends ModelAdmin{
 				if($invoice->Status == 'unpaid' && $invoice->Sent){$receivablescount++;$recievablesmoney += $invoice->getTotalOutstanding();}
 			}
 		}
-		$data = array(
+		$counts = array(
 			'UnpaidCount' => $unpaidcount,
 			'UnsentCount'=> $unsentcount,
 			'PaidCount' => $paidcount,
 			'OverdueCount' => $overduecount,
 			'ReceivablesCount' => $receivablescount,
-
-			'UnpaidMoney' => DBField::create('Currency',$unpaidmoney),
-			'UnsentMoney' => DBField::create('Currency',$unsentmoney),
-			'PaidMoney'=> DBField::create('Currency',$paidmoney),
-			'OverdueMoney' => DBField::create('Currency',$overduemoney),
-			'ReceivablesMoney' => DBField::create('Currency',$recievablesmoney)
 		);
-		return new ArrayData($data);
+		$monies = array(
+			'UnpaidMoney' => $unpaidmoney,
+			'UnsentMoney' => $unsentmoney,
+			'PaidMoney'=> $paidmoney,
+			'OverdueMoney' => $overduemoney,
+			'ReceivablesMoney' => $recievablesmoney
+		);
+		//convert to Currency fields
+		foreach($monies as $key => $amount){
+			$cur = Currency::create();
+			$cur->setValue($amount);
+			$monies[$key] = $cur;
+		}
+		return new ArrayData(array_merge($counts,$monies));
 	}
 
 	function getEditForm($id = null, $fields = null) {

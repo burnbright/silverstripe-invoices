@@ -6,7 +6,4 @@ class InvoiceEventRegistrationDecorator extends DataObjectDecorator{
 		
 	}
 	
-	
-	
 }
-?>
