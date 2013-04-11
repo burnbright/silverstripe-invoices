@@ -78,8 +78,10 @@ class InvoiceGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_ItemReq
 		if(!$this->record || !$this->record->ID){
 			return $form;
 		}
-		$form->Actions()->push(new CompositeField(
-			LiteralField::create("viewinvoice","<a class=\"ss-ui-button newwindow\" href=\"".$this->Link("viewinvoice")."\">View</a>")
+		$actions =  $form->Actions();
+		
+		$actions->push(CompositeField::create(
+			LiteralField::create("viewinvoice","<a class=\"ss-ui-button newwindow\" href=\"".$this->Link("viewinvoice")."\"><span class=\"ui-icon btn-icon-preview\" style=\"display:inline-block;\"></span> View</a>")
 		));
 		
 		if(!$this->record->PDFVersionID){
@@ -88,17 +90,15 @@ class InvoiceGridFieldDetailForm_ItemRequest extends GridFieldDetailForm_ItemReq
 				"viewinvoice"
 			);
 		}
-		elseif(!$this->record->Sent){
-			$form->Actions()->insertAfter(
-				LiteralField::create("previewemail","<a class=\"ss-ui-button\" href=\"".$this->Link("previewemail")."\">Preview Email</a>"),
-				"viewinvoice"
-			);
-			$form->Actions()->insertAfter(
-				LiteralField::create("emailinvoice","<a class=\"ss-ui-button\" href=\"".$this->Link("emailinvoice")."\">Email Invoice</a>"),
-				"viewinvoice"
-			);
-		}
+		elseif(!$this->record->Sent && $this->record->Email){
+			$link = "mailto:{$this->record->Email}?Subject=".$this->record->getEmailSubject();
+			$link .= "&Body=".$this->record->getEmailContent(true);
 
+			$actions->push(CompositeField::create(
+				LiteralField::create("emailinvoice","<label>Email:</label> <a class=\"ss-ui-button\" href=\"".$this->Link("emailinvoice")."\">Send</a>"),
+				LiteralField::create("mailto","<a class=\"ss-ui-button\" href=\"".$link."\">Compose</a>")
+			)->addExtraClass("ss-ui-buttonset nolabel  ui-buttonset"));
+		}
 		return $form;
 	}
 
