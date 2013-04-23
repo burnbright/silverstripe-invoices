@@ -45,4 +45,3 @@ class InvoiceType extends DataObject{
 	}
 
 }
-?>
