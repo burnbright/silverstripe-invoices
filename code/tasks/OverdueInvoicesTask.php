@@ -1,131 +1,33 @@
 <?php
-
-
-class OverdueInvoicesTask extends DailyTask{
-	
-	//configure string of emails / actions
-	/**
-	 *  daysoverdue => array(
-	 * 		'sendmail' => array(
-	 * 			'to' => 'client',
-	 * 			'template' => 'HostingOverdueEmail',
-	 * 			'subject' => 'Invoice #%d is %d days overdue'
-	 * 		),
-	 * 		'sendmail' => 'AdminOverdueNotice',
-	 * 		'condition' => array(
-	 * 			'relation' => 'Client',
-	 * 			'callfunction' => 'canSuspend'
-	 * 		)
-	 * 		'action' => array(
-	 * 			'relation' => 'Client',
-	 * 			'callfunction' => 'suspendAccount'
-	 * 		)
-	 * 	)
-	 * 
-	 */
-	public static $overdueoptions = array(
-		5 => array(
-			'sendmail' => array(
-				'to' => 'client',
-				'template' => 'InvoiceOverdueReminderEmail',
-				'subject' => 'Invoice #%1$s for %2$s is now %3$d days overdue'
-			)
-		),
-		14 => array(
-			'sendmail' => array(
-				'to' => 'client',
-				'template' => 'InvoiceOverdueReminderEmail',
-				'subject' => 'Invoice #%1$s for %2$s is now %3$d days overdue.'
-			)
-		)
-	);
-	
-	static $sendfrom = null;
+/**
+ * Checks if any invoices are now overdue
+ */
+class OverdueInvoicesTask extends CliController{
 	
 	function process(){
-		$nl = (Director::is_cli()) ? "\n" : "</br>";echo $nl; //get correct new line code
-		//check for overdue invoices
-		if($overdueinvoices = DataObject::get('Invoice',"DueDate < NOW()")){ //i'm not sure why escaping doesn't work in this sql
-			foreach($overdueinvoices as $invoice){
-				//make sure the same notification isn't sent twice.
-//				die($invoice->NoticeLastSent." ".$invoice->DaysOverdue()." ".$invoice->LastSentDays());
-				
-				if(!$invoice->NoticeLastSent || $this->findBestOption($invoice->DaysOverdue()) > $this->findBestOption($invoice->LastSentDays())){
-					
-					$this->processOverdueInvoice($invoice);
-					//TODO: group invoices by client or email?
-				}
+		$date = date("Y-m-d"); //today
+		$between_SQL = "\"DueDate\" BETWEEN '$date 00:00:00' AND '$date 23:59:59'";
+		$invoices = DataList::create("Invoice")->where($between_SQL);
+		if($invoices->exists()){
+			$output = new ArrayList();
+			foreach($invoices as $invoice){
+				$output->push($invoice->customise(array(
+					'AdminLink' => "admin/invoices/Invoice/EditForm/field/Invoice/item/{$invoice->ID}/edit" //doesn't work in ss3 templating
+				)));
 			}
+			$data = new ArrayData(array(
+				"Invoices" => $output
+			));
+			$email = new Email(Email::getAdminEmail(),Email::getAdminEmail());
+			$email->setFrom(Email::getAdminEmail());
+			$email->setSubject("Invoice(s) now overdue");
+			$email->setTemplate("GenericEmail");
+			$email->setBody($data->renderWith("OverdueInvoiceAdminEmail"));
+			$email->send();
 		}else{
-			echo "No overdue invoices.$nl";
+			echo "no overdue invoices\n";
 		}
-	}
-	
-	
-	protected function processOverdueInvoice($invoice){
-		if($moption = $this->findBestOption($invoice->DaysOverdue())){		
-			
-			foreach(self::$overdueoptions[$moption] as $key => $option){
-				switch($key){
-					case "sendmail":
-						$this->sendMail($option,$invoice);
-						
-						break;
-					case "action":
-					break;
-				}
-			}
-		
-		}
-	}
-	
-	/**
-	 * Helper function for getting the overdue option to send.
-	 */
-	protected function findBestOption($daysoverdue){
-		$bestoption = null;
-		foreach(self::$overdueoptions as $key => $option){
-			if($key < $daysoverdue && ($key > $bestoption || $bestoption == null)){
-				$bestoption = $key;
-			}
-		}
-		return $bestoption;
-	}
-	
-	protected function sendMail($option,$invoice){
-
-		if(!$option || !isset($option['to']) || !isset($option['template']) || !isset($option['subject'])){
-			return;
-		}
-			
-		$template = $option['template'];
-		
-		$from = (self::$sendfrom)? self::$sendfrom : Email::getAdminEmail();
-		
-		$to = $option['to'];
-		if(strtolower($to) == 'admin')
-			$to = Email::getAdminEmail();
-		if(strtolower($to) == 'client')
-			$to = $invoice->Email;
-		
-		$subject = sprintf($option['subject'],$invoice->InvoiceNumber(),$invoice->Name,$invoice->DaysOverdue());
-		
-		$body = $invoice->customise(array())->renderWith($template);
-		
-		$mail = new Email($from,$to,$subject,$body);
-		$mail->send();
-		
-		if(strtolower($option['to']) == 'client'){
-			$invoice->NoticeLastSent = date('Y-m-d', time());
-			$invoice->write();
-		}
-		
-		echo $subject."<br/>";
-		
-		
 		
 	}
 	
 }
-
-?>
