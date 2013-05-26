@@ -160,7 +160,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<% control Lines %>
+				<% loop Lines %>
 					<tr class="$EvenOdd <% if DataObject.IsPaid %>paid<% end_if %> $CreditDebit">
 						<td class="date">$Date.Long</td>
 						<td class="activity">$Activity</td>
@@ -170,7 +170,7 @@
 						<td class="credit money"><% if Credit %>$NiceCredit.Nice<% end_if %></td>
 						<td class="balance money">$Balance.Nice</td>
 					</tr>
-				<% end_control %>
+				<% end_loop %>
 			</tbody>
 			<tfoot>
 				<tr>

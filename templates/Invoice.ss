@@ -80,9 +80,9 @@
 		<table class="costsummary" cellpadding="5" width="98%" style="border-collapse:collapse;">
 			<tr><th class="label">Item</th><th>Quantity</th><th class="rate">Rate</th><th>Total</th></tr>
 			<!-- invoice items -->
-			<% control InvoiceItems %>
+			<% loop InvoiceItems %>
 			<tr><td class="label">$Description<br/> </td><td>$Quantity</td><td class="rate">$Cost.Nice</td><td>$TotalCost.Nice</td></tr>
-			<% end_control %>
+			<% end_loop %>
 			<!-- totals -->
 			<tr><td class="label">Sub Total</td><td></td><td></td><td>$SubTotal.Nice</td></tr>
 			<% if InvoiceType.TaxRate %><tr><td class="label">+ GST @ $InvoiceType.TaxRate.Nice</td><td></td><td class="rate">$InvoiceType.TaxRate.Nice</td><td>$Tax.Nice</td></tr><% end_if %>
